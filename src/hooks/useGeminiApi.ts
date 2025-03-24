@@ -1,20 +1,35 @@
 import { useQuery } from '@tanstack/react-query'
+import { config } from '../lib/config'
 
 interface AnalyzeTextOptions {
   text: string
-  apiKey: string
+  apiKey?: string
 }
 
 interface GeminiApiResponse {
-  // Add the actual response type here
+  candidates: Array<{
+    content: {
+      parts: Array<{
+        text: string
+      }>
+    },
+    finishReason: string,
+    index: number,
+    safetyRatings: Array<{
+      category: string,
+      probability: string
+    }>
+  }>,
+  promptFeedback?: {
+    safetyRatings: Array<{
+      category: string,
+      probability: string
+    }>
+  }
 }
 
-const fetchGeminiApi = async ({ text, apiKey }: AnalyzeTextOptions): Promise<GeminiApiResponse> => {
-  // This is a placeholder for the actual Gemini API implementation
-  // You'll need to replace this with the actual API call when you have your API key
-  
-  // Example implementation (to be replaced with actual Gemini API)
-  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+const fetchGeminiApi = async ({ text, apiKey = config.gemini.apiKey }: AnalyzeTextOptions): Promise<GeminiApiResponse> => {
+  const response = await fetch(config.gemini.endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -35,13 +50,19 @@ const fetchGeminiApi = async ({ text, apiKey }: AnalyzeTextOptions): Promise<Gem
     })
   })
   
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error?.message || 'Failed to fetch from Gemini API');
+  }
+
   return response.json()
 }
 
-export const useGeminiApi = ({ text, apiKey }: AnalyzeTextOptions) => {
+export const useGeminiApi = ({ text, apiKey = config.gemini.apiKey }: AnalyzeTextOptions) => {
   const { data, error, isLoading } = useQuery({
-    queryKey: ['gemini-api', text, apiKey],
-    queryFn: () => fetchGeminiApi({ text, apiKey })
+    queryKey: ['gemini-api', text],
+    queryFn: () => fetchGeminiApi({ text, apiKey }),
+    enabled: !!text
   })
 
   return { data, error, isLoading }
