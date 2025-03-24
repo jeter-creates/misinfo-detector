@@ -297,19 +297,201 @@ function App() {
                 </div>
                 <div className="p-6">
                   <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:text-primary-foreground prose-h3:text-base prose-h2:text-lg prose-p:text-muted-foreground prose-strong:text-foreground">
-                    {analysisResult.split("\n").map((line, i) => {
+                    {analysisResult.split("\n").map((line, i, lines) => {
                       // Detect section headers starting with '-' and style them
                       if (line.trim().startsWith('-')) {
                         const sectionName = line.trim().substring(1).trim();
+                        
+                        // Choose appropriate icon based on section name
+                        let icon = (
+                          <svg 
+                            className="w-4 h-4 mr-2" 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                            <polyline points="16 7 22 7 22 13"></polyline>
+                          </svg>
+                        );
+                        
+                        // Use different icons for different sections
+                        if (sectionName.toLowerCase().includes('summary')) {
+                          icon = (
+                            <svg 
+                              className="w-4 h-4 mr-2" 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            >
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                              <polyline points="14 2 14 8 20 8"></polyline>
+                              <line x1="16" y1="13" x2="8" y2="13"></line>
+                              <line x1="16" y1="17" x2="8" y2="17"></line>
+                              <line x1="10" y1="9" x2="8" y2="9"></line>
+                            </svg>
+                          );
+                        } else if (sectionName.toLowerCase().includes('misinformation')) {
+                          icon = (
+                            <svg 
+                              className="w-4 h-4 mr-2" 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            >
+                              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                              <line x1="12" y1="9" x2="12" y2="13"></line>
+                              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                          );
+                        } else if (sectionName.toLowerCase().includes('recommendations')) {
+                          icon = (
+                            <svg 
+                              className="w-4 h-4 mr-2" 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            >
+                              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                              <path d="m9 12 2 2 4-4"></path>
+                            </svg>
+                          );
+                        } else if (sectionName.toLowerCase().includes('credibility')) {
+                          icon = (
+                            <svg 
+                              className="w-4 h-4 mr-2" 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            >
+                              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                            </svg>
+                          );
+                        }
+                        
+                        // Determine color based on section - using consistent primary color for all sections
+                        let borderColor = "border-primary";
+                        let bgColor = "bg-primary/5 dark:bg-primary/10";
+                        let textColor = "text-primary";
+                        
                         return (
-                          <h3 key={i} className="font-semibold text-foreground mt-4 border-b pb-1 border-border/30">
-                            {sectionName}
-                          </h3>
+                          <div key={i} className="mb-4">
+                            <h3 className={`font-bold text-lg ${textColor} ${bgColor} py-2 px-3 rounded-md mt-5 mb-3 border-l-4 ${borderColor} flex items-center`}>
+                              {icon}
+                              {sectionName}
+                            </h3>
+                          </div>
                         );
                       }
                       
+                      // Track what section we're in
+                      let currentSection = "";
+                      // Look backward to find the most recent section header
+                      for (let j = i; j >= 0; j--) {
+                        const prevLine = lines[j];
+                        if (prevLine.trim().startsWith('-')) {
+                          currentSection = prevLine.trim().substring(1).trim().toLowerCase();
+                          break;
+                        }
+                      }
+                      
+                      // Style content within Key Claims Analysis section
+                      if (line.trim().includes(":") && !line.trim().startsWith("-")) {
+                        // Split the line at the first colon to separate the claim from the analysis
+                        const colonIndex = line.indexOf(":");
+                        if (colonIndex > 0) {
+                          const claim = line.substring(0, colonIndex).trim();
+                          const analysis = line.substring(colonIndex + 1).trim();
+                          
+                          // Check if this is potentially a claim with analysis
+                          if (claim.length > 3 && claim.length < 100 && analysis.length > 10) {
+                            // Determine styling based on current section - using consistent primary color
+                            let borderColor = "border-primary/30";
+                            
+                            return (
+                              <div key={i} className="mb-4 bg-card dark:bg-card/40 rounded-md p-3 border border-border/30">
+                                <p className="font-medium text-foreground mb-1">{claim}:</p>
+                                <p className={`text-muted-foreground pl-2 border-l-2 ${borderColor}`}>{analysis}</p>
+                              </div>
+                            );
+                          }
+                        }
+                      }
+                      
+                      // Special handling for Summary section (usually the first paragraph after Summary header)
+                      if (currentSection.includes('summary') && line.trim() !== "" && !line.includes(":")) {
+                        return (
+                          <div key={i} className="mb-4 bg-blue-50/50 dark:bg-blue-900/5 rounded-md p-4 border border-blue-100 dark:border-blue-900/20">
+                            <p className="text-foreground italic">{line}</p>
+                          </div>
+                        );
+                      }
+                      
+                      // Special handling for Credibility Score
+                      if (currentSection.includes('credibility') && line.trim() !== "") {
+                        // Try to extract any numbers that might be scores
+                        const numbers = line.match(/\d+/g);
+                        const hasScore = numbers && numbers.length > 0;
+                        
+                        if (hasScore) {
+                          const score = parseInt(numbers[0]);
+                          
+                          // Set appropriate color based on score thresholds
+                          let scoreColor = "text-amber-500";
+                          let bgColor = "bg-amber-50 dark:bg-amber-900/10";
+                          let borderColor = "border-amber-200 dark:border-amber-900/20";
+                          
+                          if (score === 100) {
+                            scoreColor = "text-green-500";
+                            bgColor = "bg-green-50 dark:bg-green-900/10";
+                            borderColor = "border-green-200 dark:border-green-900/20";
+                          } else if (score < 60) {
+                            scoreColor = "text-red-500";
+                            bgColor = "bg-red-50 dark:bg-red-900/10";
+                            borderColor = "border-red-200 dark:border-red-900/20";
+                          }
+                          
+                          // Replace numbers in the text with colored spans
+                          const scoreRegex = new RegExp(`\\b${score}\\b`, 'g');
+                          const textWithColoredScore = line.replace(
+                            scoreRegex, 
+                            `<span class="${scoreColor} font-medium">${score}</span>`
+                          );
+                          
+                          return (
+                            <div key={i} className={`mb-4 ${bgColor} rounded-md p-4 border ${borderColor} flex items-center`}>
+                              <div className="mr-4">
+                                <div className={`text-2xl font-bold ${scoreColor}`}>{score}/100</div>
+                                <div className="text-xs text-muted-foreground">Credibility Score</div>
+                              </div>
+                              <p className="text-foreground flex-1" dangerouslySetInnerHTML={{ __html: textWithColoredScore }}></p>
+                            </div>
+                          );
+                        }
+                      }
+                      
                       // Return regular paragraph
-                      return line.trim() !== "" ? <p key={i}>{line}</p> : <br key={i} />;
+                      return line.trim() !== "" ? <p key={i} className="mb-3">{line}</p> : <br key={i} />;
                     })}
                   </div>
                 </div>
