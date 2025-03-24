@@ -25,8 +25,8 @@ A client-side application that uses the Gemini API to analyze text credibility a
 
 ### Prerequisites
 
-- Node.js (v16+)
-- pnpm
+- Node.js (v18+)
+- pnpm (7.0+)
 - Gemini API key from Google AI Studio
 
 ### Installation
@@ -64,10 +64,29 @@ This project uses environment variables to securely store your API key:
 
 ## Features
 
-- Text analysis for credibility
-- Misinformation detection
-- Modern and responsive UI
-- Client-side only (no backend required)
+- Client-side only application
+- Gemini API integration for text credibility analysis
+- Google Search grounding for verifying claims against latest web information
+- Modern and responsive design with shadcn/ui components
+- Detailed analysis with credibility scoring
+
+## How It Works
+
+The Misinformation Detector uses the Gemini API with Google Search grounding to analyze text for credibility:
+
+1. Users input text to be analyzed
+2. The application sends the text to the Gemini API
+3. Gemini analyzes the text and checks claims against recent web information using Google Search grounding
+4. The analysis result is displayed with a credibility score and supporting evidence
+
+### Google Search Grounding
+
+This application uses Google Search grounding to improve response accuracy by retrieving relevant information from the web. The implementation includes:
+
+- Dynamic retrieval that intelligently determines when web search would be beneficial
+- Web search results displayed alongside the analysis 
+- Supporting evidence from reliable sources to verify or dispute claims
+- Automated fact-checking against the latest information
 
 ## License
 
