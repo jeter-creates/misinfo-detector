@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import { useGeminiApi } from './hooks/useGeminiApi'
 import { WebResult } from './lib/geminiClient'
@@ -7,6 +7,45 @@ function App() {
   const [inputText, setInputText] = useState('')
   const [submittedText, setSubmittedText] = useState('')
   const [useGrounding, setUseGrounding] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  
+  // Initialize theme based on system preference or localStorage on mount
+  useEffect(() => {
+    // Check localStorage or system preference
+    const savedTheme = localStorage.theme || 
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    
+    setTheme(savedTheme as 'light' | 'dark');
+    
+    // Listen for system preference changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (!localStorage.theme) { // Only auto-switch if user hasn't manually set a preference
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+  
+  // Update DOM and localStorage when theme changes
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+    
+    localStorage.theme = theme;
+  }, [theme]);
+  
+  // Toggle theme function
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
   
   // Use the Gemini API hook with grounding option
   const { data, error, isLoading } = useGeminiApi({ 
@@ -32,7 +71,7 @@ function App() {
   const isQuotaError = errorMessage?.includes('429') || errorMessage?.includes('quota') || errorMessage?.includes('exhausted')
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted text-foreground flex flex-col">
+    <div className={`min-h-screen bg-gradient-to-b from-background to-muted text-foreground flex flex-col ${theme === 'dark' ? 'dark' : 'light'}`}>
       <header className="py-6 border-b border-border/30 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 flex items-center justify-center">
           <div className="flex items-center">
@@ -58,6 +97,27 @@ function App() {
                 Powered by Gemini AI
               </p>
             </div>
+            <button 
+              className="ml-4 p-2 rounded-full bg-background/50 hover:bg-background/80 transition-colors"
+              onClick={toggleTheme}
+            >
+              <svg 
+                className="w-6 h-6 text-primary" 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                {theme === 'dark' ? (
+                  <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707"></path>
+                ) : (
+                  <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                )}
+              </svg>
+            </button>
           </div>
         </div>
       </header>
@@ -78,8 +138,8 @@ function App() {
                   strokeLinejoin="round"
                 >
                   <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="16" x2="12" y2="12"></line>
-                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
                 Verify Content Credibility
               </h2>
@@ -236,7 +296,7 @@ function App() {
                   <h2 className="text-xl font-semibold">Analysis Result</h2>
                 </div>
                 <div className="p-6">
-                  <div className="prose prose-sm max-w-none prose-headings:font-semibold prose-headings:text-primary-foreground prose-h3:text-base prose-h2:text-lg prose-p:text-muted-foreground prose-strong:text-foreground">
+                  <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:text-primary-foreground prose-h3:text-base prose-h2:text-lg prose-p:text-muted-foreground prose-strong:text-foreground">
                     {analysisResult.split("\n").map((line, i) => {
                       // Detect section headers starting with '-' and style them
                       if (line.trim().startsWith('-')) {
@@ -282,7 +342,7 @@ function App() {
                             href={result.url} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline flex items-center"
+                            className="text-blue-600 dark:text-blue-400 hover:underline flex items-center"
                           >
                             {result.title}
                             <svg 
@@ -334,6 +394,15 @@ function App() {
           </div>
           <p className="text-xs text-muted-foreground">
             Powered by Gemini API {isGrounded ? 'with Google Search Grounding' : ''} • {new Date().getFullYear()}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Using {theme === 'dark' ? 'dark' : 'light'} mode • 
+            <button 
+              onClick={toggleTheme} 
+              className="ml-1 text-primary hover:underline focus:outline-none"
+            >
+              Switch to {theme === 'dark' ? 'light' : 'dark'} mode
+            </button>
           </p>
         </div>
       </footer>
