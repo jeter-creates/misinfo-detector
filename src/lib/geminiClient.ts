@@ -9,8 +9,8 @@ export const getGroundedModel = (useGrounding = false) => {
   // If grounding is disabled, just return a basic model
   if (!useGrounding) {
     return genAI.getGenerativeModel({
-      model: "gemini-1.5-flash", // Use a model with potentially higher quotas
-    });
+      model: "gemini-1.5-flash", // Use same model but without grounding
+    }, { apiVersion: "v1beta" }); // Ensure consistent API version
   }
   
   // Otherwise return model with grounding capabilities
@@ -22,13 +22,13 @@ export const getGroundedModel = (useGrounding = false) => {
           googleSearchRetrieval: {
             dynamicRetrievalConfig: {
               mode: DynamicRetrievalMode.MODE_DYNAMIC,
-              dynamicThreshold: 0.5, // Medium threshold - adjust as needed
+              dynamicThreshold: 0.3, // Lower threshold to 0.3 (default) to reduce unnecessary searches
             },
           },
         },
       ],
     },
-    { apiVersion: "v1beta" }
+    { apiVersion: "v1beta" } // Ensure consistent API version
   );
 };
 
@@ -80,9 +80,15 @@ export const analyzeTextCredibility = async (text: string, useGrounding = false)
   try {
     const model = getGroundedModel(useGrounding);
 
-    const prompt = `Analyze the following text for credibility and potential misinformation. 
+    // Add current date context to help the model understand "now"
+    const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    // Include factual context about current US president to help model accuracy
+    const promptText = `Today's date is ${currentDate}. Important context: As of March 2025, Donald Trump is the current President of the United States, having won the 2024 election.
+
+      Analyze the following text for credibility and potential misinformation. 
       Provide a detailed assessment with a credibility score from 0-100 where 0 is completely false and 100 is completely credible.
-      ${useGrounding ? 'For any claims that seem questionable, use recent information from the web to verify them.' : 'Use your knowledge to evaluate the claims in the text.'}
+      ${useGrounding ? 'For any claims that seem questionable, use recent information from the web to verify them.' : 'Use your most up-to-date knowledge to evaluate the claims in the text.'}
       
       Text to analyze: "${text}"
       
@@ -92,9 +98,13 @@ export const analyzeTextCredibility = async (text: string, useGrounding = false)
       - Key Claims Analysis: (Analyze major claims in the text and their accuracy)
       ${useGrounding ? '- Supporting Evidence: (List supporting evidence from the web if available)' : ''}
       - Misinformation Detected: (Highlight any potential misinformation)
-      - Recommendations: (How a reader should interpret this information)`;
+      - Recommendations: (How a reader should interpret this information)
+      
+      Important: For any claims about current political leaders, officials, or recent events, please be sure to verify with the most current information.`;
 
-    const result = await model.generateContent(prompt);
+    // Simply call the API directly with the text prompt
+    const result = await model.generateContent(promptText);
+    
     const response = result.response;
     
     // Safely extract grounding data with explicit 'any' type
