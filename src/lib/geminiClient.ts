@@ -84,7 +84,7 @@ export const analyzeTextCredibility = async (text: string, useGrounding = false)
     const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     
     // Include factual context about current US president to help model accuracy
-    const promptText = `Today's date is ${currentDate}. Important context: As of March 2025, Donald Trump is the current President of the United States, having won the 2024 election.
+    const promptText = `Today's date is ${currentDate}.
 
       Analyze the following text for credibility and potential misinformation. 
       Provide a detailed assessment with a credibility score from 0-100 where 0 is completely false and 100 is completely credible.
