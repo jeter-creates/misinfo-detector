@@ -9,7 +9,7 @@ function App() {
       <header className="mb-8">
         <h1 className="text-4xl font-bold text-center">Misinformation Detector</h1>
         <p className="text-center text-muted-foreground mt-2">
-          Analyze text credibility using AI
+          Analyze source credibility using AI
         </p>
       </header>
       
