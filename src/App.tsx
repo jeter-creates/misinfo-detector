@@ -16,7 +16,7 @@ function App() {
       <main className="w-full max-w-2xl">
         <div className="p-6 bg-card rounded-lg shadow-md">
           <p className="mb-4">
-            Welcome to the Misinformation Detector template. This application will help users
+            Welcome to the Misinformation Detector. This application will help users
             analyze text credibility using the Gemini API.
           </p>
           <div className="flex justify-center">
