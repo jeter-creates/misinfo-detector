@@ -120,7 +120,7 @@ export const analyzeTextCredibility = async (text: string, useGrounding = false)
     ) : [];
     
     return {
-      analysis: response.text(),
+      analysis: response.text().replace(/\*/g, ''),
       groundingMetadata: groundingData,
       webSearchQueries,
       webResults,
